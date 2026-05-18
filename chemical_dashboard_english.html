@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<title>Chemical Expiry Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#07101c;--panel:#0d1725;--panel2:#101c2c;--line:#233149;--text:#eef4ff;--muted:#94a3b8;--dim:#61708a;--blue:#2f91ff;--red:#ff4d5f;--orange:#f59e0b;--green:#4ade80;--purple:#bd5cff;--yellow:#fbbf24}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top left,#10243e 0,#07101c 38%,#050a12 100%);color:var(--text);font-family:'IBM Plex Sans',Arial,sans-serif}.wrap{padding:18px;max-width:1660px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}.brand{display:flex;gap:14px;align-items:center}.logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,#2278ff,#0b53c8);display:grid;place-items:center;box-shadow:0 0 30px rgba(47,145,255,.25)}.logo svg{width:30px;fill:white}h1{font-size:22px;margin:0 0 6px;font-weight:700;letter-spacing:.02em}.sub{color:#a7b4c9;font-size:15px}.actions{display:flex;gap:14px;align-items:center}.timebox,.uploadBtn{background:rgba(15,27,43,.88);border:1px solid var(--line);border-radius:10px;padding:12px 18px;color:var(--text);box-shadow:0 8px 28px rgba(0,0,0,.18)}.timebox{font-size:13px}.timebox b{display:block;font-size:15px;margin-top:2px}.uploadBtn{cursor:pointer;font-weight:700}.uploadBtn input{display:none}.grid{display:grid;grid-template-columns:270px 1fr;gap:16px}.side{display:grid;gap:14px}.kpi{background:linear-gradient(135deg,rgba(16,30,48,.97),rgba(13,22,35,.97));border:1px solid var(--line);border-radius:10px;padding:16px 20px;min-height:124px;position:relative;overflow:hidden}.kpi:after{content:"";position:absolute;right:18px;top:22px;width:58px;height:58px;border-radius:50%;opacity:.13;background:currentColor}.kpi .label{font-weight:700;font-size:13px;text-transform:uppercase;color:currentColor}.kpi .num{font:700 32px 'IBM Plex Mono';margin:8px 0}.kpi .small{display:flex;gap:16px;color:#c9d4e6;font-size:14px}.total{color:var(--blue)}.critical{color:var(--red)}.warning{color:var(--orange)}.soon{color:var(--blue)}.ok{color:var(--green)}.expired{color:var(--purple)}.main{display:grid;gap:16px}.chartgrid{display:grid;grid-template-columns:1.15fr 1fr;gap:16px}.card{background:linear-gradient(160deg,rgba(14,27,43,.96),rgba(9,18,30,.96));border:1px solid var(--line);border-radius:11px;padding:20px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 10px 30px rgba(0,0,0,.18)}.title{font-weight:700;text-transform:uppercase;font-size:15px;margin-bottom:18px}.chartArea{height:330px;position:relative}.chartFlex{display:grid;grid-template-columns:1fr 330px;gap:20px;align-items:center}.statusTable{width:100%;border-collapse:collapse;font-size:14px}.statusTable th{color:#b5c2d8;font-size:12px;text-align:left;border-bottom:1px solid var(--line);padding:10px}.statusTable td{border-bottom:1px solid rgba(255,255,255,.06);padding:12px 10px}.dot{width:12px;height:12px;border-radius:3px;display:inline-block;margin-right:8px}.twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px}.tableCard{padding:0;overflow:hidden}.tableHead{display:flex;justify-content:space-between;align-items:center;padding:18px 20px}.filters{display:flex;gap:10px}.filters input,.filters select{background:#0a1422;border:1px solid var(--line);border-radius:8px;color:var(--text);padding:10px 12px}table.data{width:100%;border-collapse:collapse;font-size:13px}table.data th{background:rgba(255,255,255,.06);color:#d8e2f1;text-align:left;padding:12px 16px;text-transform:uppercase;font-size:12px}table.data td{padding:12px 16px;border-top:1px solid rgba(255,255,255,.06)}.right{text-align:right}.center{text-align:center}.badge{display:inline-block;border-radius:6px;padding:5px 10px;font-weight:700;font-size:12px}.badge.critical{background:#e83f55;color:white}.badge.warning{background:#9a6507;color:#fff}.badge.soon{background:#0b5fb8;color:#fff}.badge.ok{background:#0b7d43;color:#fff}.badge.expired{background:#7d2ac8;color:#fff}.pager{display:flex;gap:10px;align-items:center;justify-content:flex-end;padding:14px 20px;color:#b8c6db}.pagebtn{background:#0a1422;border:1px solid var(--line);border-radius:7px;color:#cde0ff;padding:7px 10px;cursor:pointer}.pagebtn.active{background:#0b4fa4;color:white}.note{color:#8fa3c2;font-size:12px;margin-top:8px}@media(max-width:1200px){.grid,.chartgrid,.twocol,.chartFlex{grid-template-columns:1fr}.side{grid-template-columns:repeat(2,1fr)}}@media(max-width:700px){.top,.actions{display:block}.grid{display:block}.side{grid-template-columns:1fr;margin-bottom:16px}.tableCard{overflow:auto}.wrap{padding:12px}}
+.statusTable tbody tr[data-status]{cursor:pointer}.statusTable tbody tr[data-status]:hover{background:rgba(47,145,255,.12)}canvas{cursor:pointer}
+.historyPanel{display:grid;grid-template-columns:340px 1fr;gap:18px;align-items:stretch}.historyInfo{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px}.historyInfo .muted{color:#94a3b8;font-size:13px;line-height:1.45}.historyInfo .chem{font-size:18px;font-weight:800;margin:8px 0 4px}.historyInfo .code{font-family:'IBM Plex Mono';color:#cfe3ff;font-size:13px}.historyStats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.historyStat{border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px;background:rgba(0,0,0,.16)}.historyStat b{display:block;font:700 18px 'IBM Plex Mono';margin-top:4px}.data tbody tr{cursor:pointer}.data tbody tr:hover{background:rgba(47,145,255,.10)}.data tbody tr.selected{background:rgba(47,145,255,.18)}
+
+.materialInfo{margin-top:12px;border:1px solid rgba(47,145,255,.24);background:linear-gradient(145deg,rgba(47,145,255,.10),rgba(255,255,255,.035));border-radius:10px;padding:12px}
+.materialInfo.empty{border-color:rgba(255,255,255,.08);background:rgba(255,255,255,.025)}
+.materialInfoTitle{font-weight:800;font-size:13px;text-transform:uppercase;color:#cfe3ff;margin-bottom:8px}
+.materialGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.materialPill{border:1px solid rgba(255,255,255,.09);border-radius:8px;background:rgba(0,0,0,.16);padding:9px}
+.materialPill span{display:block;color:#94a3b8;font-size:12px}.materialPill b{display:block;margin-top:3px;font:700 15px 'IBM Plex Mono'}
+.leatherList{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}.leatherChip{border:1px solid rgba(47,145,255,.35);background:rgba(47,145,255,.13);color:#eaf4ff;border-radius:999px;padding:6px 9px;font-size:12px;font-weight:700}
+.infoMark{display:inline-grid;place-items:center;margin-left:6px;width:18px;height:18px;border-radius:50%;background:rgba(47,145,255,.18);border:1px solid rgba(47,145,255,.45);color:#cfe3ff;font-size:11px;font-weight:800}
+.data tbody tr.has-extra td:nth-child(2){color:#cfe3ff;font-weight:700}
+@media(max-width:700px){.materialGrid{grid-template-columns:1fr}}
+@media(max-width:900px){.historyPanel{grid-template-columns:1fr}}
+</style>
+</head><body><div class="wrap">
+<header class="top"><div class="brand"><div class="logo"><svg viewBox="0 0 24 24"><path d="M9 3h6v2l-1 1v4.2l5.4 8.7A2 2 0 0 1 17.7 22H6.3a2 2 0 0 1-1.7-3.1L10 10.2V6L9 5V3zm2.2 8.4-4.9 8h11.4l-4.9-8-.8-.4-.8.4z"/></svg></div><div><h1>CHEMICAL DASHBOARD</h1><div class="sub">Chemical tracking · </div></div></div><div class="actions"><div class="timebox">Displayed data <b id="updatedAt">Loading</b></div><button class="uploadBtn" onclick="reloadDashboardData()" type="button">🔄 Refresh</button></div></header>
+<div class="grid"><aside class="side"><div class="kpi total"><div class="label">Total Lots</div><div class="num" id="kTotal">0</div><div class="small"><b>100%</b><span>Of total</span></div></div><div class="kpi critical"><div class="label">Critical</div><div class="num" id="kCritical">0</div><div class="small"><b id="pCritical">0%</b><span>≤ 30 days</span></div></div><div class="kpi warning"><div class="label">Warning</div><div class="num" id="kWarning">0</div><div class="small"><b id="pWarning">0%</b><span>31 - 90 days</span></div></div><div class="kpi soon"><div class="label">Soon</div><div class="num" id="kSoon">0</div><div class="small"><b id="pSoon">0%</b><span>91 - 180 days</span></div></div><div class="kpi ok"><div class="label">OK</div><div class="num" id="kOk">0</div><div class="small"><b id="pOk">0%</b><span>&gt; 180 days</span></div></div><div class="kpi expired"><div class="label">Expired Chemicals</div><div class="num" id="kExpired">0</div><div class="small"><b id="pExpired">0%</b><span>Expired</span></div></div></aside>
+<main class="main"><div class="chartgrid"><section class="card"><div class="title">Expiry Status</div><div class="chartFlex"><div class="chartArea"><canvas id="statusChart"></canvas></div><table class="statusTable"><thead><tr><th>Status</th><th class="right">Quantity</th><th class="right">Percentage</th></tr></thead><tbody id="statusRows"></tbody></table></div></section><section class="card"><div class="title">Stock by Location (KG)</div><div class="chartArea"><canvas id="stockChart"></canvas></div><div class="note" id="stockTotal"></div></section></div><div class="twocol"><section class="card"><div class="title">Local Chemical Quantity</div><div class="chartArea"><canvas id="locCountChart"></canvas></div><div class="note">Reorder warning level: Ammonia = 60 KG · PM = 100 KG</div></section><section class="card"><div class="title">FT Quantity</div><div class="chartArea"><canvas id="daysChart"></canvas></div></section></div><section class="card" id="historySection"><div class="title">Quantity Change Over Time</div><div class="historyPanel"><div class="historyInfo"><div class="muted">Click a chemical in the table below to view quantity history.</div><div class="chem" id="historyName">No chemical selected</div><div class="code" id="historyCode">—</div><div class="historyStats"><div class="historyStat">Data Points<b id="historyCount">0</b></div><div class="historyStat">Latest Quantity<b id="historyLatest">0</b></div></div><div id="materialExtraPanel" class="materialInfo empty"><div class="materialInfoTitle">Chemical Information</div><div class="muted">Click a chemical/FT code in the table to view packaging specifications and applicable leather type.</div></div></div><div class="chartArea"><canvas id="historyChart"></canvas></div></div></section><section class="card tableCard"><div class="tableHead"><div class="title" style="margin:0"><span id="listTitle">All Chemical List</span></div><div class="filters"><input id="search" placeholder="Search code, name, lot..." oninput="page=1;renderTable()"><select id="statusFilter" onchange="page=1;renderTable()"><option value="">All</option><option value="expired">Expired</option><option value="critical">Critical</option><option value="warning">Warning</option><option value="soon">Soon</option><option value="ok">OK</option></select></div></div><table class="data"><thead><tr><th>STT</th><th>Item Number</th><th>Description</th><th>Lot Number</th><th>Location</th><th class="right">Quantity On Hand</th><th>UM</th><th>Expiration Date</th><th class="center">Days Left</th><th>Status</th></tr></thead><tbody id="tbody"></tbody></table><div class="pager"><span id="pageInfo"></span><button class="pagebtn" onclick="prevPage()">‹</button><span id="pages"></span><button class="pagebtn" onclick="nextPage()">›</button></div></section></main></div></div>
+<script>
+// CLEAN VERSION: no default embedded data, no LocalStorage, no upload/delete logic.
+// Current inventory: Google Sheet tab "Inventory by LB". Expiration Date is column N (index 13), read as TEXT in exact format YYYY-MM-DD.
+// History chart: Google Sheet tab "DATA".
+
+const GOOGLE_SHEET_ID = '1kvZ1ym6fDGYze5e1KFNG6sSK1ooz4riWPJI-a5qvYXA';
+const INVENTORY_SHEET = 'Inventory by LB';
+const HISTORY_SHEET = 'DATA';
+const EXPIRATION_COL_INDEX = 13; // Column N = 0-based index 13, text YYYY-MM-DD
+const AUTO_REFRESH_MS = 60000;
+
+let rows = [];
+let qtyHistory = {};
+let selectedHistoryKey = '';
+let charts = {};
+let page = 1;
+const pageSize = 5;
+let lastRefreshAt = '';
+
+const colors = { expired:'#bd5cff', critical:'#ff4d5f', warning:'#f59e0b', soon:'#2f91ff', ok:'#4ade80' };
+const labels = {
+  expired:'Expired',
+  critical:'Critical (≤ 30 days)',
+  warning:'Warning (31 - 90 days)',
+  soon:'Soon (91 - 180 days)',
+  ok:'OK (> 180 days)'
+};
+const MATERIAL_EXTRA = {"QM04291":{"description":"SADEPE PE","packagingKg":170.0,"type":"flammable","leatherKg":{"Grand Slam":264.25}},"QM04294":{"description":"SADEDULLER DW","packagingKg":100.0,"type":"non-flammable","leatherKg":{"Grand Slam":151.0,"ACE":150.0}},"QM04436":{"description":"SADE WHITE TP","packagingKg":160.0,"type":"non-flammable","leatherKg":{"Grand Slam":130.0,"Pegasus":235.0,"ACE":120.0}},"QM05350":{"description":"SADELACQUER CWB","packagingKg":170.0,"type":"flammable","leatherKg":{"Grand Slam":290.0,"Pegasus":350.0,"ACE":290.0}},"QM06517":{"description":"SADE VM","packagingKg":170.0,"type":"flammable","leatherKg":{"Grand Slam":56.0,"Pegasus":90.0,"ACE":80.0}},"QM06827":{"description":"SADE WHITE 443","packagingKg":160.0,"type":"non-flammable","leatherKg":{"Grand Slam":340.0}},"QM07694":{"description":"SADESIL PM","packagingKg":170.0,"type":"flammable","leatherKg":{"Grand Slam":8.0,"Pegasus":10.0,"ACE":8.0}},"QP02050":{"description":"AMMONIA WATER 24%","packagingKg":30.0,"type":"non-flammable","leatherKg":{"Grand Slam":4.2,"Pegasus":4.8,"ACE":4.2}},"QP03290":{"description":"TITEKOTE RI-115","packagingKg":1000.0,"type":"non-flammable","leatherKg":{"Grand Slam":1286.25}},"QP04172":{"description":"ASTACIN GROUND UH TF","packagingKg":1000.0,"type":"non-flammable","leatherKg":{"Grand Slam":84.0,"Pegasus":115.0,"ACE":112.0}},"QP06444":{"description":"PRIMAL SCL-371","packagingKg":160.0,"type":"non-flammable","leatherKg":{"Grand Slam":278.0,"Pegasus":188.0,"ACE":160.0}},"QP07205":{"description":"RODA CRYL 5416","packagingKg":1000.0,"type":"non-flammable","leatherKg":{"Grand Slam":318.0,"Pegasus":135.0,"ACE":278.0}},"QP07806":{"description":"EUDERM X-GRADE MP 2/N","packagingKg":120.0,"type":"non-flammable","leatherKg":{"Grand Slam":40.0,"Pegasus":72.0,"ACE":64.0}},"QP08234":{"description":"UNIRES RU-13-134","packagingKg":110.0,"type":"non-flammable","leatherKg":{"Grand Slam":95.0,"Pegasus":50.0,"ACE":104.0}},"QP08377":{"description":"EUDERM X-GRADE FH","packagingKg":80.0,"type":"non-flammable","leatherKg":{"Grand Slam":200.0,"Pegasus":225.0,"ACE":120.0}},"QP08478":{"description":"EUDERM NAPPA SOFT MF","packagingKg":220.0,"type":"non-flammable","leatherKg":{"Grand Slam":28.0,"Pegasus":45.0,"ACE":28.0}},"QP08558":{"description":"UNIRES RU-13-734","packagingKg":110.0,"type":"non-flammable","leatherKg":{"Grand Slam":119.0,"ACE":120.0}},"QP08854":{"description":"REGEL PU-301","packagingKg":25.0,"type":"non-flammable","leatherKg":{"Grand Slam":9.0,"Pegasus":11.0,"ACE":10.0}},"QP05883":{"description":"PM","packagingKg":190.0,"type":"flammable","leatherKg":{"Grand Slam":3.0,"Pegasus":30.0}},"QP08303":{"description":"EUDERM X-GRADE CGS/N-C","packagingKg":115.0,"type":"non-flammable","leatherKg":{"Grand Slam":75.0,"Pegasus":750.0}},"QP08901":{"description":"RODA CRYL 5748","packagingKg":1000.0,"type":"non-flammable","leatherKg":{"Pegasus":160.0,"ACE":160.0}},"QP03382":{"description":"CORIAL BINDER IF","packagingKg":120.0,"type":"non-flammable","leatherKg":{"Grand Slam":20.0}},"QP05490":{"description":"DENSOTAN A","packagingKg":140.0,"type":"non-flammable","leatherKg":{"Grand Slam":20.0,"Pegasus":2.3}},"QP08557":{"description":"XR-13-906","packagingKg":22.5,"type":"non-flammable","leatherKg":{"Grand Slam":50.0,"Pegasus":55.0,"ACE":50.0}},"QP08324":{"description":"UNIRES RU-76-125","packagingKg":110.0,"type":"non-flammable","leatherKg":{"Grand Slam":40.0}},"QP06659":{"description":"RODA PURE LUSTER 1430","packagingKg":120.0,"type":"non-flammable","leatherKg":{"Pegasus":80.0}},"QP06933":{"description":"RODA PURE PREBASE 772","packagingKg":120.0,"type":"non-flammable","leatherKg":{"Pegasus":80.0}},"QP07006":{"description":"MELIO PROMUL CU-47.A LIQ","packagingKg":120.0,"type":"non-flammable","leatherKg":{"Pegasus":120.0}},"QP08497":{"description":"RH-6678","packagingKg":110.0,"type":"non-flammable","leatherKg":{"Pegasus":240.0}},"QP08914":{"description":"RODA WAX MONO","packagingKg":110.0,"type":"non-flammable","leatherKg":{"Pegasus":80.0}},"QP08551":{"description":"WT-72-500","packagingKg":110.0,"type":"non-flammable","leatherKg":{"Pegasus":30.0}},"QP06007":{"description":"PRIMAL FGR","packagingKg":160.0,"type":"non-flammable"},"QP08326":{"description":"TITEKOTE RI-78-060","packagingKg":120.0,"type":"non-flammable"},"QM04461":{"description":"SADE WHITE 2059","packagingKg":160.0,"type":"non-flammable","leatherKg":{"Pegasus":400.0,"ACE":340.0}},"QP09287":{"description":"XR-55-400","packagingKg":25.0,"type":"non-flammable","leatherKg":{"Pegasus":6.0}}};
+const FT_EXTRA = {"FT089ST04409":{"description":"STUCCO 4409","leathers":["Pegasus","Grand Slam"]},"FT089IM00302":{"description":"IMPREGNACION 0302","leathers":["Grand Slam"]},"FT089IM00318":{"description":"IMPREGNACION 0318","leathers":["Grand Slam"]},"FT089FR08826":{"description":"FONDO ROLLER 8826","leathers":["Grand Slam"]},"FT089PI20751":{"description":"PINTURA 20751","leathers":["Grand Slam"]},"FT089LA01070":{"description":"LACA AGUA 1070","leathers":["Grand Slam"]},"FT089FR08828":{"description":"FONDO ROLLER 8828","leathers":["Pegasus","ACE"]},"FT089PI20754":{"description":"PINTURA 20754","leathers":["Pegasus"]},"FT089LA01127":{"description":"LACA AGUA 1127","leathers":["Pegasus"]},"FT089IM00216":{"description":"IMPREGNACION 0216","leathers":["ACE"]},"FT089PI20755":{"description":"PINTURA 20755","leathers":["ACE"]},"FT089LA01108":{"description":"LACA AGUA 1108","leathers":["ACE"]},"FT089PI20777":{"description":"PINTURA 20777"},"FT089TO08385":{"description":"TOP 8385"},"FT089FR08836":{"description":"FONDO ROLLER 8836","leathers":["Pegasus"]}};
+
+const reorderLevelPlugin = {
+  id:'reorderLevelPlugin',
+  afterDraw(chart){
+    const levels = chart.options.plugins && chart.options.plugins.reorderLevels;
+    if(!levels || !chart.scales || !chart.scales.y) return;
+    const {ctx, chartArea:{left,right}, scales:{y}} = chart;
+    levels.forEach(level => {
+      const yPos = y.getPixelForValue(level.value);
+      if(yPos < chart.chartArea.top || yPos > chart.chartArea.bottom) return;
+      ctx.save();
+      ctx.beginPath();
+      ctx.setLineDash([7,5]);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = level.color || '#ff4d5f';
+      ctx.moveTo(left,yPos);
+      ctx.lineTo(right,yPos);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = level.color || '#ff4d5f';
+      ctx.font = '700 12px IBM Plex Sans';
+      ctx.textAlign = 'right';
+      ctx.fillText(level.label, right-6, yPos-7);
+      ctx.restore();
+    });
+  }
+};
+Chart.register(reorderLevelPlugin);
+
+const dashboardValueLabelPlugin = {
+  id: 'dashboardValueLabelPlugin',
+  afterDatasetsDraw(chart){
+    if(['historyChart','daysChart'].includes(chart.canvas.id)) return;
+    const {ctx} = chart;
+    ctx.save();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '700 12px IBM Plex Sans';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    chart.data.datasets.forEach((dataset, datasetIndex) => {
+      const meta = chart.getDatasetMeta(datasetIndex);
+      if(!meta || meta.hidden) return;
+      meta.data.forEach((element, index) => {
+        const raw = dataset.data[index];
+        if(raw === null || raw === undefined || Number(raw) === 0) return;
+        let label = fmt(raw);
+        if(chart.canvas.id === 'stockChart' || chart.canvas.id === 'locCountChart') label += ' KG';
+        const pos = element.tooltipPosition ? element.tooltipPosition() : {x: element.x, y: element.y};
+        if(chart.config.type === 'bar') ctx.fillText(label, pos.x, pos.y - 10);
+        else ctx.fillText(label, pos.x, pos.y);
+      });
+    });
+    ctx.restore();
+  }
+};
+Chart.register(dashboardValueLabelPlugin);
+
+const ftKgLabelPlugin = {
+  id:'ftKgLabelPlugin',
+  afterDatasetsDraw(chart){
+    if(chart.canvas.id !== 'daysChart') return;
+    const {ctx} = chart;
+    const meta = chart.getDatasetMeta(0);
+    ctx.save();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '700 12px IBM Plex Sans';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    meta.data.forEach((arc,i) => {
+      const val = chart.data.datasets[0].data[i];
+      if(val === 0 || val === null || val === undefined) return;
+      const p = arc.tooltipPosition();
+      ctx.fillText(fmt(val)+' KG', p.x, p.y);
+    });
+    ctx.restore();
+  }
+};
+Chart.register(ftKgLabelPlugin);
+
+function $(id){ return document.getElementById(id); }
+function fmt(n){ return Number(n || 0).toLocaleString('en-US',{maximumFractionDigits:2}); }
+function pct(n,t){ return t ? (n/t*100).toFixed(2)+'%' : '0%'; }
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function norm(h){ return String(h ?? '').toLowerCase().replace(/[^a-z0-9]/g,''); }
+function num(v){
+  if(typeof v === 'number') return Number.isFinite(v) ? v : 0;
+  let s = String(v ?? '').trim();
+  if(!s) return 0;
+  // Handles 1,234.56 and simple text values.
+  s = s.replace(/,/g,'');
+  let n = Number(s);
+  return Number.isFinite(n) ? n : 0;
+}
+function cleanLoc(v){ return String(v ?? '').split('-')[0].trim().toUpperCase() || 'N/A'; }
+function col(headers, candidates){
+  const hs = headers.map(norm);
+  for(const c of candidates){
+    const i = hs.indexOf(c);
+    if(i >= 0) return i;
+  }
+  return -1;
+}
+function historyKey(id,name){ return norm(id)+'|'+norm(name); }
+function today(){ const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+function isoDate(y,m,d){ return `${String(y).padStart(4,'0')}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+function validDateParts(y,m,d){
+  y = Number(y); m = Number(m); d = Number(d);
+  if(!Number.isInteger(y) || !Number.isInteger(m) || !Number.isInteger(d)) return false;
+  if(y < 1900 || y > 2100 || m < 1 || m > 12 || d < 1 || d > 31) return false;
+  const dt = new Date(y, m-1, d);
+  return dt.getFullYear() === y && dt.getMonth() === m-1 && dt.getDate() === d;
+}
+function excelSerialToIso(n){
+  if(!Number.isFinite(n) || n < 20000 || n > 70000) return '';
+  const dt = new Date(Math.round((n - 25569) * 86400 * 1000));
+  return isoDate(dt.getUTCFullYear(), dt.getUTCMonth()+1, dt.getUTCDate());
+}
+function parseDate(v){
+  if(v instanceof Date && !isNaN(v)) return isoDate(v.getFullYear(), v.getMonth()+1, v.getDate());
+  if(typeof v === 'number') return excelSerialToIso(v);
+  let s = String(v ?? '').trim();
+  if(!s) return '';
+  s = s.replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();
+
+  // Google Visualization sometimes returns Date(2026,4,18); month is 0-based.
+  let gd = s.match(/^Date\((\d{4})\s*,\s*(\d{1,2})\s*,\s*(\d{1,2})\)/i);
+  if(gd){
+    const y = Number(gd[1]), m = Number(gd[2]) + 1, d = Number(gd[3]);
+    return validDateParts(y,m,d) ? isoDate(y,m,d) : '';
+  }
+
+  // ISO / database style: YYYY-MM-DD, YYYY/MM/DD, YYYY.MM.DD
+  let ymd = s.match(/^(\d{4})[\/\.\-](\d{1,2})[\/\.\-](\d{1,2})$/);
+  if(ymd){
+    const y = Number(ymd[1]), m = Number(ymd[2]), d = Number(ymd[3]);
+    return validDateParts(y,m,d) ? isoDate(y,m,d) : '';
+  }
+
+  // IMPORTANT: Inventory by LB column N uses text YYYY-MM-DD.
+  let dmy = s.match(/^(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{2}|\d{4})$/);
+  if(dmy){
+    let d = Number(dmy[1]), m = Number(dmy[2]), y = Number(dmy[3]);
+    if(y < 100) y += 2000;
+    return validDateParts(y,m,d) ? isoDate(y,m,d) : '';
+  }
+
+  // Text months like 18-May-2026 or 18 May 2026
+  const months = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+  let m1 = s.match(/^(\d{1,2})[-\s]([A-Za-z]{3,})[-\s](\d{2,4})$/);
+  if(m1){
+    let d = Number(m1[1]), m = months[m1[2].slice(0,3).toLowerCase()], y = Number(m1[3]);
+    if(y < 100) y += 2000;
+    return validDateParts(y,m,d) ? isoDate(y,m,d) : '';
+  }
+
+  // Excel serial stored as string
+  let n = Number(s.replace(/,/g,''));
+  if(Number.isFinite(n)) return excelSerialToIso(n);
+
+  // Last-resort parse only for non-slash text. Slash dates were handled as DD/MM above.
+  const dt = new Date(s);
+  if(!isNaN(dt)) return isoDate(dt.getFullYear(), dt.getMonth()+1, dt.getDate());
+  return '';
+}
+function parseInventoryExpirationDate(v){
+  // Column N is TEXT with exact format YYYY-MM-DD.
+  // Do NOT use new Date() or DD/MM fallback here, because that can swap month/day and show wrong expiry dates.
+  let s = String(v ?? '')
+    .replace(/^\ufeff/, '')
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .replace(/\u00a0/g, ' ')
+    .trim();
+
+  // If Google returns a formula/text with time after it, keep only the date part.
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T].*)?$/);
+  if(!m) return '';
+
+  const y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
+  return validDateParts(y, mo, d) ? isoDate(y, mo, d) : '';
+}
+function daysLeftFromIsoDate(exp){
+  const e = parseInventoryExpirationDate(exp);
+  if(!e) return 99999;
+  const [y,m,d] = e.split('-').map(Number);
+  return Math.ceil((new Date(y,m-1,d) - today()) / 86400000);
+}
+function status(d){ if(d < 0) return 'expired'; if(d <= 30) return 'critical'; if(d <= 90) return 'warning'; if(d <= 180) return 'soon'; return 'ok'; }
+
+function googleSheetCsvUrl(sheetName){
+  return `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}&v=${Date.now()}`;
+}
+function parseCsvText(txt){
+  // Manual CSV parser: keep every cell as TEXT exactly from Google Sheet.
+  // This avoids XLSX/JavaScript auto-converting column N dates like 2026-05-18 into another date format.
+  const rows = [];
+  let row = [];
+  let cell = '';
+  let inQuotes = false;
+
+  for(let i = 0; i < txt.length; i++){
+    const ch = txt[i];
+    const next = txt[i + 1];
+
+    if(inQuotes){
+      if(ch === '"' && next === '"'){
+        cell += '"';
+        i++;
+      }else if(ch === '"'){
+        inQuotes = false;
+      }else{
+        cell += ch;
+      }
+    }else{
+      if(ch === '"'){
+        inQuotes = true;
+      }else if(ch === ','){
+        row.push(cell);
+        cell = '';
+      }else if(ch === '\n'){
+        row.push(cell);
+        rows.push(row);
+        row = [];
+        cell = '';
+      }else if(ch === '\r'){
+        // ignore CR; LF handles the row break
+      }else{
+        cell += ch;
+      }
+    }
+  }
+  row.push(cell);
+  rows.push(row);
+  return rows;
+}
+
+async function fetchSheetRows(sheetName){
+  const res = await fetch(googleSheetCsvUrl(sheetName), {cache:'no-store'});
+  if(!res.ok) throw new Error('Could not load sheet '+sheetName+' (HTTP '+res.status+')');
+  const txt = await res.text();
+  if(/^\s*</.test(txt) || txt.includes('<title>')){
+    throw new Error('Google returned an error/login page for sheet '+sheetName+'. Please check sharing: Anyone with the link → Viewer.');
+  }
+  return parseCsvText(txt);
+}
+
+function mapInventoryRows(data){
+  const headerRow = data.findIndex(r => {
+    const ns = (r || []).map(norm);
+    return ns.includes('itemnumber') && (ns.includes('quantityonhand') || ns.includes('qty') || ns.includes('quantity'));
+  });
+  if(headerRow < 0) return [];
+
+  const h = data[headerRow] || [];
+  const idx = {
+    id: col(h,['itemnumber','itemno','item','id','code']),
+    name: col(h,['description','name','chemicalname','itemdescription']),
+    lot: col(h,['lotnumber','lot','lotno']),
+    loc: col(h,['location','loc','warehouse','subinventory']),
+    qty: col(h,['quantityonhand','qty','quantity','onhand']),
+    um: col(h,['um','uom','unit'])
+  };
+  idx.exp = EXPIRATION_COL_INDEX; // Always column N, Text YYYY-MM-DD
+
+  if(idx.id < 0 || idx.name < 0 || idx.qty < 0) return [];
+
+  return data.slice(headerRow+1).map((r, rowIndex) => {
+    if(rowIndex < 5) console.log('DEBUG Column N Expiration sample', rowIndex+1, r[idx.exp]);
+    const rawExp = r[idx.exp];
+    const exp = parseInventoryExpirationDate(rawExp);
+    const d = daysLeftFromIsoDate(exp);
+    return {
+      id: String(r[idx.id] ?? '').trim(),
+      name: String(r[idx.name] ?? '').trim(),
+      lot: idx.lot >= 0 ? String(r[idx.lot] ?? '').trim() : '',
+      loc: idx.loc >= 0 ? cleanLoc(r[idx.loc]) : 'N/A',
+      qty: num(r[idx.qty]),
+      um: idx.um >= 0 ? (String(r[idx.um] ?? 'KG').trim() || 'KG') : 'KG',
+      exp,
+      rawExp: String(rawExp ?? '').trim(),
+      days: d,
+      status: status(d)
+    };
+  }).filter(r => r.id && r.name);
+}
+
+function isUsefulHistoryDateLabel(v){
+  const s = String(v ?? '').trim();
+  if(!s) return false;
+  const n = norm(s);
+  return !['department','dept','itemnumber','itemno','description','name','unit','uom','um','total','remark','remarks','note','notes'].includes(n);
+}
+function parseHistoryRows(data){
+  const headerRow = data.findIndex(r => {
+    const ns = (r || []).map(norm);
+    return ns.includes('itemnumber') && (ns.includes('description') || ns.includes('name'));
+  });
+  if(headerRow < 0) return {};
+
+  const h = data[headerRow] || [];
+  const idx = {
+    dept: col(h,['department','dept']),
+    id: col(h,['itemnumber','itemno','item','id','code']),
+    name: col(h,['description','name','chemicalname','itemdescription']),
+    unit: col(h,['unit','um','uom'])
+  };
+  if(idx.id < 0 || idx.name < 0) return {};
+
+  const fixedMax = Math.max(idx.dept, idx.id, idx.name, idx.unit);
+  const dateCols = [];
+  h.forEach((x,i) => {
+    if(i > fixedMax && isUsefulHistoryDateLabel(x)) dateCols.push({i, label:String(x).trim(), order:dateCols.length});
+  });
+  if(!dateCols.length) return {};
+
+  const out = {};
+  data.slice(headerRow+1).forEach(r => {
+    const id = String(r[idx.id] ?? '').trim();
+    const name = String(r[idx.name] ?? '').trim();
+    if(!id || !name) return;
+    const key = historyKey(id,name);
+    const series = [];
+    dateCols.forEach(dc => {
+      const raw = r[dc.i];
+      if(raw === '' || raw === null || raw === undefined) return;
+      series.push({date:dc.label, qty:Number(num(raw).toFixed(3)), source:'Google Sheet', order:dc.order});
+    });
+    out[key] = {
+      id,
+      name,
+      dept: idx.dept >= 0 ? String(r[idx.dept] ?? '').trim() : '',
+      type: idx.unit >= 0 ? String(r[idx.unit] ?? '').trim() : '',
+      series
+    };
+  });
+  return out;
+}
+
+async function loadDashboardData(){
+  $('updatedAt').textContent = 'Loading Google Sheet...';
+  try{
+    const invRows = await fetchSheetRows(INVENTORY_SHEET);
+    const mapped = mapInventoryRows(invRows);
+    if(!mapped.length){
+      console.warn('Inventory preview:', invRows.slice(0,5));
+      throw new Error('Could not read Inventory by LB data. Please check the Item Number, Quantity On Hand columns and column N expiration date formatted as text YYYY-MM-DD.');
+    }
+    rows = mapped;
+
+    try{
+      const histRows = await fetchSheetRows(HISTORY_SHEET);
+      qtyHistory = parseHistoryRows(histRows);
+      if(!Object.keys(qtyHistory).length) console.warn('No history data found in DATA sheet');
+    }catch(histErr){
+      qtyHistory = {};
+      console.warn('Could not read DATA sheet:', histErr);
+    }
+
+    lastRefreshAt = new Date().toISOString();
+    refresh();
+  }catch(err){
+    console.error(err);
+    $('updatedAt').textContent = err.message || 'Could not read Google Sheet';
+    alert(err.message || 'Could not read Google Sheet');
+  }
+}
+function reloadDashboardData(){ loadDashboardData(); }
+
+function findHistoryKey(r){
+  const key = historyKey(r.id,r.name);
+  if(qtyHistory[key]) return key;
+  const idn = norm(r.id);
+  return Object.keys(qtyHistory).find(k => k.split('|')[0] === idn) || key;
+}
+
+function materialInfoForId(id){
+  const key = String(id || '').trim().toUpperCase();
+  return MATERIAL_EXTRA[key] || FT_EXTRA[key] || null;
+}
+function leatherText(info){
+  if(!info) return '';
+  if(info.leatherKg){
+    return Object.entries(info.leatherKg).map(([k,v]) => `${k}: ${fmt(v)} KG/100k`).join('\n');
+  }
+  if(info.leathers){
+    return 'Applies to leather type: ' + info.leathers.join(', ');
+  }
+  return '';
+}
+function materialTooltip(id){
+  const info = materialInfoForId(id);
+  if(!info) return '';
+  const parts = [];
+  if(info.description) parts.push(info.description);
+  if(info.packagingKg) parts.push('Packaging Specification: ' + fmt(info.packagingKg) + ' KG');
+  const lt = leatherText(info);
+  if(lt) parts.push(lt);
+  if(info.type) parts.push('Type: ' + info.type);
+  return parts.join('\n');
+}
+function renderMaterialInfo(id){
+  const box = $('materialExtraPanel');
+  if(!box) return;
+  const info = materialInfoForId(id);
+  if(!info){
+    box.className = 'materialInfo empty';
+    box.innerHTML = `<div class="materialInfoTitle">Leather Information</div><div class="muted">No additional data available for code <b>${esc(id || '')}</b>.</div>`;
+    return;
+  }
+  let body = '';
+  if(info.packagingKg){
+    body += `<div class="materialPill"><span>Packaging Specification</span><b>${fmt(info.packagingKg)} KG</b></div>`;
+  }
+  if(info.type){
+    body += `<div class="materialPill"><span>Type</span><b>${esc(info.type)}</b></div>`;
+  }
+  if(info.leatherKg){
+    body += Object.entries(info.leatherKg).map(([k,v]) => `<div class="materialPill"><span>${esc(k)}</span><b>${fmt(v)} KG/100k</b></div>`).join('');
+  }
+  if(info.leathers){
+    body += `<div class="materialPill"><span>FT applies to leather type</span><b>${info.leathers.map(esc).join(', ')}</b></div>`;
+  }
+  box.className = 'materialInfo';
+  box.innerHTML = `<div class="materialInfoTitle">Leather Information · ${esc(id || '')}</div>${info.description ? `<div class="muted"><b>${esc(info.description)}</b></div>` : ''}<div class="materialGrid">${body}</div>`;
+}
+
+function selectChemical(id,name){
+  selectedHistoryKey = findHistoryKey({id,name});
+  renderHistoryChart();
+  renderMaterialInfo(id);
+  $('historySection').scrollIntoView({behavior:'smooth', block:'start'});
+  renderTable();
+}
+
+function renderHistoryChart(){
+  let key = selectedHistoryKey;
+  if(!key){
+    const first = rows.find(r => qtyHistory[findHistoryKey(r)]);
+    if(first) key = findHistoryKey(first);
+    else key = Object.keys(qtyHistory)[0] || '';
+    selectedHistoryKey = key;
+  }
+  const h = qtyHistory[key];
+  const ser = (h && h.series ? h.series : []).filter(p => Number.isFinite(Number(p.qty)));
+  $('historyName').textContent = h ? h.name : 'Chưa có dữ liệu lịch sử';
+  $('historyCode').textContent = h ? `${h.id}${h.dept?' · '+h.dept:''}${h.type?' · '+h.type:''}` : '—';
+  $('historyCount').textContent = ser.length;
+  $('historyLatest').textContent = ser.length ? fmt(ser[ser.length-1].qty) : '0';
+  makeChart('historyChart','line',{
+    labels: ser.map(p=>p.date),
+    datasets: [{
+      label: h ? `${h.id} - ${h.name}` : 'Quantity',
+      data: ser.map(p=>Number(p.qty)||0),
+      borderColor:'#2f91ff',
+      backgroundColor:'rgba(47,145,255,.16)',
+      fill:true,
+      tension:.25,
+      pointRadius:2,
+      pointHoverRadius:5,
+      borderWidth:2
+    }]
+  },{
+    responsive:true,
+    maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    plugins:{legend:{labels:{color:'#dbe7fb'}},tooltip:{callbacks:{label:c=>' Quantity: '+fmt(c.raw)}}},
+    scales:{
+      x:{ticks:{color:'#94a3b8',maxTicksLimit:12},grid:{color:'rgba(255,255,255,.05)'}},
+      y:{ticks:{color:'#c9d4e6',callback:v=>fmt(v)},grid:{color:'rgba(255,255,255,.08)'}}
+    }
+  });
+}
+
+function groups(){ const g={expired:0,critical:0,warning:0,soon:0,ok:0}; rows.forEach(r=>g[r.status]++); return g; }
+function byLoc(metric='qty'){ const m={}; rows.forEach(r=>m[r.loc]=(m[r.loc]||0)+(metric==='qty'?r.qty:1)); return Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,10); }
+function formatRefreshTime(isoText){
+  if(!isoText) return 'Chưa tải';
+  const d = new Date(isoText);
+  if(isNaN(d)) return isoText;
+  return d.toLocaleString('en-US',{hour12:false}) + ' · Google Sheet';
+}
+function updateKPIs(){
+  const g = groups(), t = rows.length;
+  $('kTotal').textContent = t;
+  for(const s of ['Expired','Critical','Warning','Soon','Ok']){
+    const key = s.toLowerCase();
+    $('k'+s).textContent = g[key];
+    $('p'+s).textContent = pct(g[key],t);
+  }
+  $('updatedAt').textContent = formatRefreshTime(lastRefreshAt);
+}
+function makeChart(id,type,data,options){
+  if(charts[id]) charts[id].destroy();
+  charts[id] = new Chart($(id), {type,data,options});
+}
+function applyStatusFilter(k){
+  $('statusFilter').value = k;
+  page = 1;
+  renderTable();
+  document.querySelector('.tableCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function updateCharts(){
+  const g = groups(), t = rows.length;
+  const keys = ['critical','warning','soon','ok'];
+
+  makeChart('statusChart','doughnut',{
+    labels: keys.map(k=>labels[k]),
+    datasets: [{data:keys.map(k=>g[k]), backgroundColor:keys.map(k=>colors[k]), borderWidth:0, hoverOffset:5}]
+  },{
+    responsive:true,
+    maintainAspectRatio:false,
+    cutout:'56%',
+    onClick:(e,els)=>{ if(els.length) applyStatusFilter(keys[els[0].index]); },
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` Click to view: ${c.label}: ${c.raw} (${pct(c.raw,t)})`}}}
+  });
+
+  $('statusRows').innerHTML = keys.map(k=>`<tr data-status="${k}" onclick="applyStatusFilter('${k}')"><td><span class="dot" style="background:${colors[k]}"></span>${labels[k]}</td><td class="right"><b>${g[k]}</b></td><td class="right"><b>${pct(g[k],t)}</b></td></tr>`).join('') + `<tr onclick="applyStatusFilter('')" style="cursor:pointer"><td><b>TỔNG</b></td><td class="right"><b>${t}</b></td><td class="right"><b>100%</b></td></tr>`;
+
+  const stock = byLoc('qty');
+  makeChart('stockChart','bar',{
+    labels: stock.map(x=>x[0]),
+    datasets: [{data:stock.map(x=>x[1]), backgroundColor:'#2f91ff', borderRadius:5}]
+  },{
+    indexAxis:'y',
+    responsive:true,
+    maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{x:{ticks:{color:'#c9d4e6'},grid:{color:'rgba(255,255,255,.08)'}},y:{ticks:{color:'#fff'},grid:{display:false}}}
+  });
+  $('stockTotal').textContent = 'Total: ' + fmt(rows.reduce((s,r)=>s+r.qty,0)) + ' KG';
+
+  const localChems = [
+    {label:'Neosan', match:r=>String(r.name).toUpperCase().includes('NEOSAN')},
+    {label:'Amoniac', match:r=>String(r.name).toUpperCase().includes('AMMONIA') || String(r.name).toUpperCase().includes('AMONIAC')},
+    {label:'PM', match:r=>String(r.name).toUpperCase().trim()==='PM' || String(r.id).toUpperCase()==='QP05883'}
+  ];
+  const cnt = localChems.map(c=>[c.label, rows.filter(c.match).reduce((s,r)=>s+r.qty,0)]);
+  makeChart('locCountChart','bar',{
+    labels:cnt.map(x=>x[0]),
+    datasets:[{data:cnt.map(x=>x[1]), backgroundColor:'#fbbf24', borderRadius:5}]
+  },{
+    responsive:true,
+    maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      tooltip:{callbacks:{label:c=>' '+c.label+': '+fmt(c.raw)+' KG'}},
+      reorderLevels:[{value:60,label:'Amoniac 60 KG',color:'#ff4d5f'},{value:100,label:'PM 100 KG',color:'#f59e0b'}]
+    },
+    scales:{x:{ticks:{color:'#fff'},grid:{display:false}},y:{beginAtZero:true,suggestedMax:120,ticks:{color:'#c9d4e6'},grid:{color:'rgba(255,255,255,.08)'}}}
+  });
+
+  const ftData = Object.values(rows.filter(r=>String(r.id||'').toUpperCase().startsWith('FT')).reduce((a,r)=>{
+    const id = String(r.id||'').trim().toUpperCase();
+    const k = id + ' - ' + r.name;
+    if(!a[k]) a[k] = {id, name:r.name, label:k, qty:0};
+    a[k].qty += Number(r.qty||0);
+    return a;
+  },{}));
+  const ftColors = ['#2f91ff','#ff4d5f','#f59e0b','#4ade80','#bd5cff','#fbbf24','#38bdf8','#fb7185','#a3e635','#c084fc','#22c55e','#eab308'];
+  makeChart('daysChart','doughnut',{
+    labels: ftData.map(x=>x.label),
+    datasets: [{data:ftData.map(x=>x.qty), backgroundColor:ftData.map((_,i)=>ftColors[i%ftColors.length]), borderWidth:0, hoverOffset:5}]
+  },{
+    responsive:true,
+    maintainAspectRatio:false,
+    cutout:'58%',
+    onClick:(e,els)=>{ if(els.length){ const item=ftData[els[0].index]; if(item) selectChemical(item.id,item.name); } },
+    plugins:{legend:{position:'right',labels:{color:'#dbe7fb'}},tooltip:{callbacks:{label:c=>{
+      const item = ftData[c.dataIndex];
+      const info = item ? materialInfoForId(item.id) : null;
+      const leather = info && info.leathers ? ' · Leather: ' + info.leathers.join(', ') : '';
+      return ' ' + c.label + ': ' + fmt(c.raw) + ' KG' + leather;
+    }}}}
+  });
+}
+
+function filtered(){
+  const q = $('search').value.toLowerCase();
+  const sf = $('statusFilter').value;
+  return rows.filter(r => (!sf || r.status === sf) && (!q || [r.id,r.name,r.lot,r.loc,r.exp,r.rawExp].join(' ').toLowerCase().includes(q))).sort((a,b)=>a.days-b.days);
+}
+function renderTable(){
+  const r = filtered();
+  const pages = Math.max(1, Math.ceil(r.length/pageSize));
+  if(page > pages) page = pages;
+  const start = (page-1)*pageSize;
+  const show = r.slice(start,start+pageSize);
+  const sf = $('statusFilter').value;
+  $('listTitle').textContent = sf ? `Chemical List: ${labels[sf]} (${r.length})` : 'All Chemical List';
+  $('tbody').innerHTML = show.map((x,i) => {
+    const hk = findHistoryKey(x);
+    const sel = hk === selectedHistoryKey ? ' selected' : '';
+    const tip = materialTooltip(x.id);
+    const has = tip ? ' has-extra' : '';
+    return `<tr class="${sel}${has}" ${tip ? `title="${esc(tip)}"` : ''} onclick="selectChemical('${esc(x.id)}','${esc(x.name)}')"><td class="center">${start+i+1}</td><td>${esc(x.id)}${tip ? '<span class="infoMark">i</span>' : ''}</td><td>${esc(x.name)}</td><td>${esc(x.lot)}</td><td>${esc(x.loc)}</td><td class="right">${fmt(x.qty)}</td><td>${esc(x.um)}</td><td title="Raw: ${esc(x.rawExp)}">${esc(x.exp || x.rawExp)}</td><td class="center">${x.days}</td><td><span class="badge ${x.status}">${x.status.toUpperCase()}</span></td></tr>`;
+  }).join('');
+  $('pageInfo').textContent = `Showing ${r.length?start+1:0} - ${Math.min(start+pageSize,r.length)} / ${r.length}`;
+  const maxBtns = Math.min(5,pages);
+  $('pages').innerHTML = Array.from({length:maxBtns},(_,i)=>{
+    const p = i+1;
+    return `<button class="pagebtn ${p===page?'active':''}" onclick="page=${p};renderTable()">${p}</button>`;
+  }).join('') + (pages>5 ? ` <span>... ${pages}</span>` : '');
+}
+function prevPage(){ if(page > 1){ page--; renderTable(); } }
+function nextPage(){ const p = Math.ceil(filtered().length/pageSize); if(page < p){ page++; renderTable(); } }
+function refresh(){ updateKPIs(); updateCharts(); renderHistoryChart(); page=1; renderTable(); }
+
+// Initial empty render, then load from Google Sheet.
+renderMaterialInfo('');
+refresh();
+loadDashboardData();
+setInterval(loadDashboardData, AUTO_REFRESH_MS);
+</script></body></html>
