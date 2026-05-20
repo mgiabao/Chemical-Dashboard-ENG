@@ -599,7 +599,7 @@ function updateCharts(){
 
   const localChems = [
     {label:'Neosan', match:r=>String(r.name).toUpperCase().includes('NEOSAN')},
-    {label:'Amoniac', match:r=>String(r.name).toUpperCase().includes('AMMONIA') || String(r.name).toUpperCase().includes('AMONIAC')},
+    {label:'AMMONIA WATER 24%', match:r=>String(r.name).toUpperCase().includes('AMMONIA') || String(r.name).toUpperCase().includes('AMONIAC')},
     {label:'PM', match:r=>String(r.name).toUpperCase().trim()==='PM' || String(r.id).toUpperCase()==='QP05883'}
   ];
   const cnt = localChems.map(c=>[c.label, rows.filter(c.match).reduce((s,r)=>s+r.qty,0)]);
