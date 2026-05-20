@@ -50,6 +50,7 @@ let charts = {};
 let page = 1;
 const pageSize = 5;
 let lastRefreshAt = '';
+let selectedFTIndex = null;
 
 const colors = { expired:'#bd5cff', critical:'#ff4d5f', warning:'#f59e0b', soon:'#2f91ff', ok:'#4ade80' };
 const labels = {
@@ -562,7 +563,6 @@ function applyStatusFilter(k){
   $('statusFilter').value = k;
   page = 1;
   renderTable();
-  document.querySelector('.tableCard').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function updateCharts(){
   const g = groups(), t = rows.length;
