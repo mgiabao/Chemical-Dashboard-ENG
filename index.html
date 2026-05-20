@@ -625,6 +625,22 @@ function updateCharts(){
     return a;
   },{}));
   const ftColors = ['#2f91ff','#ff4d5f','#f59e0b','#4ade80','#bd5cff','#fbbf24','#38bdf8','#fb7185','#a3e635','#c084fc','#22c55e','#eab308'];
+
+  function selectFtOnChart(index){
+    const item = ftData[index];
+    const chart = charts['daysChart'];
+    if(!item || !chart) return;
+
+    // Keep the selected FT visible on the chart and dim other FT items.
+    // This replaces the default Chart.js legend behavior that hides an item and adds a strikethrough.
+    chart.data.datasets[0].backgroundColor = ftData.map((_, i) =>
+      i === index ? ftColors[i % ftColors.length] : 'rgba(255,255,255,0.12)'
+    );
+    chart.update();
+
+    selectChemical(item.id, item.name);
+  }
+
   makeChart('daysChart','doughnut',{
     labels: ftData.map(x=>x.label),
     datasets: [{data:ftData.map(x=>x.qty), backgroundColor:ftData.map((_,i)=>ftColors[i%ftColors.length]), borderWidth:0, hoverOffset:5}]
@@ -632,8 +648,12 @@ function updateCharts(){
     responsive:true,
     maintainAspectRatio:false,
     cutout:'58%',
-    onClick:(e,els)=>{ if(els.length){ const item=ftData[els[0].index]; if(item) selectChemical(item.id,item.name); } },
-    plugins:{legend:{position:'right',labels:{color:'#dbe7fb'}},tooltip:{callbacks:{label:c=>{
+    onClick:(e,els)=>{ if(els.length) selectFtOnChart(els[0].index); },
+    plugins:{legend:{
+      position:'right',
+      labels:{color:'#dbe7fb'},
+      onClick:(e, legendItem) => selectFtOnChart(legendItem.index)
+    },tooltip:{callbacks:{label:c=>{
       const item = ftData[c.dataIndex];
       const info = item ? materialInfoForId(item.id) : null;
       const leather = info && info.leathers ? ' · Leather: ' + info.leathers.join(', ') : '';
