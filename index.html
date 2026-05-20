@@ -609,10 +609,17 @@ function updateCharts(){
   },{
     responsive:true,
     maintainAspectRatio:false,
+    onClick:(e,els)=>{
+      if(!els.length) return;
+      const chem = localChems[els[0].index];
+      if(!chem) return;
+      const matched = rows.find(chem.match);
+      if(matched) selectChemical(matched.id, matched.name);
+    },
     plugins:{
       legend:{display:false},
-      tooltip:{callbacks:{label:c=>' '+c.label+': '+fmt(c.raw)+' KG'}},
-      reorderLevels:[{value:60,label:'Amoniac 60 KG',color:'#ff4d5f'},{value:100,label:'PM 100 KG',color:'#f59e0b'}]
+      tooltip:{callbacks:{label:c=>' Click to view history: '+c.label+': '+fmt(c.raw)+' KG'}},
+      reorderLevels:[{value:60,label:'AMMONIA WATER 24% 60 KG',color:'#ff4d5f'},{value:100,label:'PM 100 KG',color:'#f59e0b'}]
     },
     scales:{x:{ticks:{color:'#fff'},grid:{display:false}},y:{beginAtZero:true,suggestedMax:120,ticks:{color:'#c9d4e6'},grid:{color:'rgba(255,255,255,.08)'}}}
   });
