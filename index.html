@@ -494,7 +494,6 @@ function selectChemical(id,name){
   selectedHistoryKey = findHistoryKey({id,name});
   renderHistoryChart();
   renderMaterialInfo(id);
-  $('historySection').scrollIntoView({behavior:'smooth', block:'start'});
   renderTable();
 }
 
