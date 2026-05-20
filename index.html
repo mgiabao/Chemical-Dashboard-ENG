@@ -563,6 +563,7 @@ function applyStatusFilter(k){
   $('statusFilter').value = k;
   page = 1;
   renderTable();
+  document.querySelector('.tableCard').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function updateCharts(){
   const g = groups(), t = rows.length;
@@ -630,9 +631,19 @@ function updateCharts(){
     const chart = charts['daysChart'];
     if(!item || !chart) return;
 
-    // Keep the selected FT visible on the chart and dim other FT items.
-    // This replaces the default Chart.js legend behavior that hides an item and adds a strikethrough.
-    chart.data.datasets[0].backgroundColor = ftData.map((_, i) =>
+    const dataset = chart.data.datasets[0];
+
+    // Click the same FT again = unselect and restore normal chart
+    if(selectedFTIndex === index){
+      selectedFTIndex = null;
+      dataset.backgroundColor = ftData.map((_, i) => ftColors[i % ftColors.length]);
+      chart.update();
+      return;
+    }
+
+    // Select/highlight clicked FT and dim others
+    selectedFTIndex = index;
+    dataset.backgroundColor = ftData.map((_, i) =>
       i === index ? ftColors[i % ftColors.length] : 'rgba(255,255,255,0.12)'
     );
     chart.update();
