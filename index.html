@@ -76,6 +76,8 @@ const pageSize = 5;
 let lastRefreshAt = '';
 let selectedFTIndex = null;
 let searchTimer = null;
+let visibleTableRows = [];
+let visibleDailyChanges = [];
 
 const colors = { expired:'#bd5cff', critical:'#ff4d5f', warning:'#f59e0b', soon:'#2f91ff', ok:'#4ade80' };
 const labels = {
@@ -722,10 +724,11 @@ function renderDailyChangeChart(){
     return;
   }
 
+  visibleDailyChanges = topChanges;
   list.innerHTML = topChanges.map((x, i) => {
     const sign = x.diff > 0 ? '+' : '';
     const cls = x.diff > 0 ? 'up' : 'down';
-    return `<div class="changeItem" onclick="selectChemicalEncoded('${enc(x.id)}','${enc(x.name)}')">
+    return `<div class="changeItem" data-change-index="${i}">
       <div>
         <div class="code">${esc(x.id)}</div>
         <div class="name">${esc(x.name)}</div>
@@ -734,6 +737,13 @@ function renderDailyChangeChart(){
       <div class="changeMeta">${esc(x.fromDate)}: ${fmt(x.prevQty)} KG → ${esc(x.toDate)}: ${fmt(x.latestQty)} KG</div>
     </div>`;
   }).join('');
+
+  list.querySelectorAll('.changeItem[data-change-index]').forEach(el => {
+    el.addEventListener('click', () => {
+      const item = visibleDailyChanges[Number(el.dataset.changeIndex)];
+      if(item) selectChemical(item.id, item.name);
+    });
+  });
 
   if(note){
     note.textContent = 'Showing all ' + topChanges.length + ' changes · ' + topChanges[0].fromDate + ' → ' + topChanges[0].toDate + ' · Click an item to view history.';
@@ -879,13 +889,20 @@ function renderTable(){
   if(sf) titleParts.push(labels[sf]);
   if(df) titleParts.push(df);
   $('listTitle').textContent = titleParts.length ? `Chemical List: ${titleParts.join(' · ')} (${r.length})` : 'All Chemical List';
+  visibleTableRows = show;
   $('tbody').innerHTML = show.map((x,i) => {
     const hk = findHistoryKey(x);
     const sel = hk === selectedHistoryKey ? ' selected' : '';
     const tip = materialTooltip(x.id);
     const has = tip ? ' has-extra' : '';
-    return `<tr class="${sel}${has}" ${tip ? `title="${esc(tip)}"` : ''} onclick="selectChemicalEncoded('${enc(x.id)}','${enc(x.name)}')"><td class="center">${start+i+1}</td><td>${esc(x.id)}${tip ? '<span class="infoMark">i</span>' : ''}</td><td>${esc(x.name)}</td><td>${esc(x.lot)}</td><td>${esc(x.loc)}</td><td>${esc(x.department || 'FT')}</td><td class="right">${fmt(x.qty)}</td><td>${esc(x.um)}</td><td title="Raw: ${esc(x.rawExp)}">${esc(x.exp || x.rawExp)}</td><td class="center">${x.days}</td><td><span class="badge ${x.status}">${x.status.toUpperCase()}</span></td></tr>`;
+    return `<tr class="${sel}${has}" ${tip ? `title="${esc(tip)}"` : ''} data-row-index="${i}"><td class="center">${start+i+1}</td><td>${esc(x.id)}${tip ? '<span class="infoMark">i</span>' : ''}</td><td>${esc(x.name)}</td><td>${esc(x.lot)}</td><td>${esc(x.loc)}</td><td>${esc(x.department || 'FT')}</td><td class="right">${fmt(x.qty)}</td><td>${esc(x.um)}</td><td title="Raw: ${esc(x.rawExp)}">${esc(x.exp || x.rawExp)}</td><td class="center">${x.days}</td><td><span class="badge ${x.status}">${x.status.toUpperCase()}</span></td></tr>`;
   }).join('');
+  $('tbody').querySelectorAll('tr[data-row-index]').forEach(tr => {
+    tr.addEventListener('click', () => {
+      const item = visibleTableRows[Number(tr.dataset.rowIndex)];
+      if(item) selectChemical(item.id, item.name);
+    });
+  });
   $('pageInfo').textContent = `Showing ${r.length?start+1:0} - ${Math.min(start+pageSize,r.length)} / ${r.length}`;
   const maxBtns = Math.min(5,pages);
   $('pages').innerHTML = Array.from({length:maxBtns},(_,i)=>{
