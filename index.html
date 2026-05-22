@@ -866,16 +866,39 @@ function updateCharts(){
 function handleSearchInput(){
   clearTimeout(searchTimer);
   searchTimer = setTimeout(() => {
-    page = 1;
-    renderTable();
-  }, 250);
+    try{
+      page = 1;
+      renderTable();
+    }catch(err){
+      console.error('Search/renderTable error:', err);
+      const body = $('tbody');
+      if(body){
+        body.innerHTML = '<tr><td colspan="11">Search error. Please clear the search box and try again.</td></tr>';
+      }
+    }
+  }, 120);
 }
 
+function safeText(v){ return String(v ?? ''); }
+function searchTextOfRow(r){
+  return [r.id,r.name,r.lot,r.loc,r.department,r.exp,r.rawExp]
+    .map(v => safeText(v).toLowerCase())
+    .join(' ');
+}
 function filtered(){
-  const q = $('search').value.toLowerCase();
+  const searchBox = $('search');
+  const q = searchBox ? safeText(searchBox.value).trim().toLowerCase() : '';
   const sf = $('statusFilter').value;
   const df = $('departmentFilter') ? $('departmentFilter').value : '';
-  return rows.filter(r => (!sf || r.status === sf) && (!df || r.department === df) && (!q || [r.id,r.name,r.lot,r.loc,r.department,r.exp,r.rawExp].join(' ').toLowerCase().includes(q))).sort((a,b)=>a.days-b.days);
+  return rows
+    .filter(r => (!sf || r.status === sf) && (!df || r.department === df) && (!q || searchTextOfRow(r).includes(q)))
+    .sort((a,b)=>(Number(a.days)||0)-(Number(b.days)||0));
+}
+function td(text, className){
+  const cell = document.createElement('td');
+  if(className) cell.className = className;
+  cell.textContent = safeText(text);
+  return cell;
 }
 function renderTable(){
   const r = filtered();
@@ -889,20 +912,58 @@ function renderTable(){
   if(sf) titleParts.push(labels[sf]);
   if(df) titleParts.push(df);
   $('listTitle').textContent = titleParts.length ? `Chemical List: ${titleParts.join(' · ')} (${r.length})` : 'All Chemical List';
+
   visibleTableRows = show;
-  $('tbody').innerHTML = show.map((x,i) => {
+  const tbody = $('tbody');
+  tbody.textContent = '';
+
+  show.forEach((x,i) => {
+    const tr = document.createElement('tr');
     const hk = findHistoryKey(x);
-    const sel = hk === selectedHistoryKey ? ' selected' : '';
     const tip = materialTooltip(x.id);
-    const has = tip ? ' has-extra' : '';
-    return `<tr class="${sel}${has}" ${tip ? `title="${esc(tip)}"` : ''} data-row-index="${i}"><td class="center">${start+i+1}</td><td>${esc(x.id)}${tip ? '<span class="infoMark">i</span>' : ''}</td><td>${esc(x.name)}</td><td>${esc(x.lot)}</td><td>${esc(x.loc)}</td><td>${esc(x.department || 'FT')}</td><td class="right">${fmt(x.qty)}</td><td>${esc(x.um)}</td><td title="Raw: ${esc(x.rawExp)}">${esc(x.exp || x.rawExp)}</td><td class="center">${x.days}</td><td><span class="badge ${x.status}">${x.status.toUpperCase()}</span></td></tr>`;
-  }).join('');
-  $('tbody').querySelectorAll('tr[data-row-index]').forEach(tr => {
+    if(hk === selectedHistoryKey) tr.classList.add('selected');
+    if(tip) tr.classList.add('has-extra');
+    if(tip) tr.title = tip;
+    tr.dataset.rowIndex = String(i);
+
+    tr.appendChild(td(start+i+1, 'center'));
+
+    const idCell = td(x.id);
+    if(tip){
+      const mark = document.createElement('span');
+      mark.className = 'infoMark';
+      mark.textContent = 'i';
+      idCell.appendChild(mark);
+    }
+    tr.appendChild(idCell);
+    tr.appendChild(td(x.name));
+    tr.appendChild(td(x.lot));
+    tr.appendChild(td(x.loc));
+    tr.appendChild(td(x.department || 'FT'));
+    tr.appendChild(td(fmt(x.qty), 'right'));
+    tr.appendChild(td(x.um));
+
+    const expCell = td(x.exp || x.rawExp);
+    expCell.title = 'Raw: ' + safeText(x.rawExp);
+    tr.appendChild(expCell);
+
+    tr.appendChild(td(x.days, 'center'));
+
+    const statusCell = document.createElement('td');
+    const badge = document.createElement('span');
+    badge.className = 'badge ' + safeText(x.status);
+    badge.textContent = safeText(x.status).toUpperCase();
+    statusCell.appendChild(badge);
+    tr.appendChild(statusCell);
+
     tr.addEventListener('click', () => {
       const item = visibleTableRows[Number(tr.dataset.rowIndex)];
       if(item) selectChemical(item.id, item.name);
     });
+
+    tbody.appendChild(tr);
   });
+
   $('pageInfo').textContent = `Showing ${r.length?start+1:0} - ${Math.min(start+pageSize,r.length)} / ${r.length}`;
   const maxBtns = Math.min(5,pages);
   $('pages').innerHTML = Array.from({length:maxBtns},(_,i)=>{
