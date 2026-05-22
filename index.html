@@ -173,6 +173,8 @@ function $(id){ return document.getElementById(id); }
 function fmt(n){ return Number(n || 0).toLocaleString('en-US',{maximumFractionDigits:2}); }
 function pct(n,t){ return t ? (n/t*100).toFixed(2)+'%' : '0%'; }
 function esc(s){ return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function enc(s){ return encodeURIComponent(String(s ?? '')); }
+function selectChemicalEncoded(id,name){ selectChemical(decodeURIComponent(id), decodeURIComponent(name)); }
 function norm(h){ return String(h ?? '').toLowerCase().replace(/[^a-z0-9]/g,''); }
 function num(v){
   if(typeof v === 'number') return Number.isFinite(v) ? v : 0;
@@ -723,7 +725,7 @@ function renderDailyChangeChart(){
   list.innerHTML = topChanges.map((x, i) => {
     const sign = x.diff > 0 ? '+' : '';
     const cls = x.diff > 0 ? 'up' : 'down';
-    return `<div class="changeItem" onclick="selectChemical('${esc(x.id)}','${esc(x.name)}')">
+    return `<div class="changeItem" onclick="selectChemicalEncoded('${enc(x.id)}','${enc(x.name)}')">
       <div>
         <div class="code">${esc(x.id)}</div>
         <div class="name">${esc(x.name)}</div>
@@ -882,7 +884,7 @@ function renderTable(){
     const sel = hk === selectedHistoryKey ? ' selected' : '';
     const tip = materialTooltip(x.id);
     const has = tip ? ' has-extra' : '';
-    return `<tr class="${sel}${has}" ${tip ? `title="${esc(tip)}"` : ''} onclick="selectChemical('${esc(x.id)}','${esc(x.name)}')"><td class="center">${start+i+1}</td><td>${esc(x.id)}${tip ? '<span class="infoMark">i</span>' : ''}</td><td>${esc(x.name)}</td><td>${esc(x.lot)}</td><td>${esc(x.loc)}</td><td>${esc(x.department || 'FT')}</td><td class="right">${fmt(x.qty)}</td><td>${esc(x.um)}</td><td title="Raw: ${esc(x.rawExp)}">${esc(x.exp || x.rawExp)}</td><td class="center">${x.days}</td><td><span class="badge ${x.status}">${x.status.toUpperCase()}</span></td></tr>`;
+    return `<tr class="${sel}${has}" ${tip ? `title="${esc(tip)}"` : ''} onclick="selectChemicalEncoded('${enc(x.id)}','${enc(x.name)}')"><td class="center">${start+i+1}</td><td>${esc(x.id)}${tip ? '<span class="infoMark">i</span>' : ''}</td><td>${esc(x.name)}</td><td>${esc(x.lot)}</td><td>${esc(x.loc)}</td><td>${esc(x.department || 'FT')}</td><td class="right">${fmt(x.qty)}</td><td>${esc(x.um)}</td><td title="Raw: ${esc(x.rawExp)}">${esc(x.exp || x.rawExp)}</td><td class="center">${x.days}</td><td><span class="badge ${x.status}">${x.status.toUpperCase()}</span></td></tr>`;
   }).join('');
   $('pageInfo').textContent = `Showing ${r.length?start+1:0} - ${Math.min(start+pageSize,r.length)} / ${r.length}`;
   const maxBtns = Math.min(5,pages);
