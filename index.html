@@ -53,7 +53,7 @@
 </div>
 <div id="dailyChangeList" class="changeList"></div>
 <div class="note" id="dailyChangeNote">Select one date. The dashboard compares it with the previous date in DATA sheet.</div>
-</section><section class="card"><div class="title">FT Quantity</div><div class="chartArea"><canvas id="daysChart"></canvas></div></section></div><section class="card" id="historySection"><div class="title">Quantity Change Over Time</div><div class="historyPanel"><div class="historyInfo"><div class="muted">Click a chemical in the table below to view quantity history.</div><div class="chem" id="historyName">No chemical selected</div><div class="code" id="historyCode">—</div><div class="historyStats"><div class="historyStat">Data Points<b id="historyCount">0</b></div><div class="historyStat">Latest Quantity<b id="historyLatest">0</b></div></div><div id="materialExtraPanel" class="materialInfo empty"><div class="materialInfoTitle">Chemical Information</div><div class="muted">Click a chemical/FT code in the table to view packaging specifications and applicable leather type.</div></div></div><div class="chartArea"><canvas id="historyChart"></canvas></div></div></section><section class="card tableCard"><div class="tableHead"><div class="title" style="margin:0"><span id="listTitle">All Chemical List</span></div><div class="filters"><input id="search" placeholder="Search code, name, lot..." oninput="handleSearchInput()"><select id="statusFilter" onchange="page=1;renderTable()"><option value="">All Statuses</option><option value="expired">Expired</option><option value="critical">Critical</option><option value="warning">Warning</option><option value="soon">Soon</option><option value="ok">OK</option></select><select id="departmentFilter" onchange="page=1;renderTable()"><option value="">All Departments</option><option value="Production">Production</option><option value="WWTP">WWTP</option><option value="FT">FT</option></select></div></div><table class="data"><thead><tr><th>STT</th><th>Item Number</th><th>Description</th><th>Lot Number</th><th>Location</th><th>Department</th><th class="right">Quantity On Hand</th><th>UM</th><th>Expiration Date</th><th class="center">Days Left</th><th>Status</th></tr></thead><tbody id="tbody"></tbody></table><div class="pager"><span id="pageInfo"></span><button class="pagebtn" onclick="prevPage()">‹</button><span id="pages"></span><button class="pagebtn" onclick="nextPage()">›</button></div></section></main></div></div>
+</section><section class="card"><div class="title">FT Quantity</div><div class="chartArea"><canvas id="daysChart"></canvas></div></section></div><section class="card" id="historySection"><div class="title">Quantity Change Over Time</div><div class="historyPanel"><div class="historyInfo"><div class="muted">Click a chemical in the table below to view quantity history.</div><div class="chem" id="historyName">No chemical selected</div><div class="code" id="historyCode">—</div><div class="historyStats"><div class="historyStat">Data Points<b id="historyCount">0</b></div><div class="historyStat">Latest Quantity<b id="historyLatest">0</b></div></div><div id="materialExtraPanel" class="materialInfo empty"><div class="materialInfoTitle">Chemical Information</div><div class="muted">Click a chemical/FT code in the table to view packaging specifications and applicable leather type.</div></div></div><div class="chartArea"><canvas id="historyChart"></canvas></div></div></section><section class="card tableCard"><div class="tableHead"><div class="title" style="margin:0"><span id="listTitle">All Chemical List</span></div><div class="filters"><input id="search" placeholder="Search code, name, lot..." oninput="handleSearchInput()"><select id="statusFilter" onchange="page=1;renderTable()"><option value="">All Statuses</option><option value="expired">Expired</option><option value="critical">Critical</option><option value="warning">Warning</option><option value="soon">Soon</option><option value="ok">OK</option></select><select id="departmentFilter" onchange="page=1;renderTable()"><option value="">All Departments</option><option value="Production">Production</option><option value="WWTP">WWTP</option><option value="FT">FT</option></select><select id="locationFilter" onchange="page=1;renderTable()"><option value="">All Locations</option></select></div></div><table class="data"><thead><tr><th>STT</th><th>Item Number</th><th>Description</th><th>Lot Number</th><th>Location</th><th>Department</th><th class="right">Quantity On Hand</th><th>UM</th><th>Expiration Date</th><th class="center">Days Left</th><th>Status</th></tr></thead><tbody id="tbody"></tbody></table><div class="pager"><span id="pageInfo"></span><button class="pagebtn" onclick="prevPage()">‹</button><span id="pages"></span><button class="pagebtn" onclick="nextPage()">›</button></div></section></main></div></div>
 <script>
 // CLEAN VERSION: no default embedded data, no LocalStorage, no upload/delete logic.
 // Current inventory: Google Sheet tab "Inventory by LB". Expiration Date is column N (index 13), read as TEXT in exact format YYYY-MM-DD.
@@ -885,13 +885,29 @@ function searchTextOfRow(r){
     .map(v => safeText(v).toLowerCase())
     .join(' ');
 }
+function updateLocationFilterOptions(){
+  const sel = $('locationFilter');
+  if(!sel) return;
+
+  const current = sel.value;
+  const locations = Array.from(new Set(rows.map(r => safeText(r.loc).trim()).filter(Boolean)))
+    .sort((a,b) => a.localeCompare(b));
+
+  sel.innerHTML = '<option value="">All Locations</option>' + locations.map(loc =>
+    `<option value="${esc(loc)}">${esc(loc)}</option>`
+  ).join('');
+
+  if(locations.includes(current)) sel.value = current;
+}
+
 function filtered(){
   const searchBox = $('search');
   const q = searchBox ? safeText(searchBox.value).trim().toLowerCase() : '';
   const sf = $('statusFilter').value;
   const df = $('departmentFilter') ? $('departmentFilter').value : '';
+  const lf = $('locationFilter') ? $('locationFilter').value : '';
   return rows
-    .filter(r => (!sf || r.status === sf) && (!df || r.department === df) && (!q || searchTextOfRow(r).includes(q)))
+    .filter(r => (!sf || r.status === sf) && (!df || r.department === df) && (!lf || r.loc === lf) && (!q || searchTextOfRow(r).includes(q)))
     .sort((a,b)=>(Number(a.days)||0)-(Number(b.days)||0));
 }
 function td(text, className){
@@ -908,9 +924,11 @@ function renderTable(){
   const show = r.slice(start,start+pageSize);
   const sf = $('statusFilter').value;
   const df = $('departmentFilter') ? $('departmentFilter').value : '';
+  const lf = $('locationFilter') ? $('locationFilter').value : '';
   const titleParts = [];
   if(sf) titleParts.push(labels[sf]);
   if(df) titleParts.push(df);
+  if(lf) titleParts.push('Location ' + lf);
   $('listTitle').textContent = titleParts.length ? `Chemical List: ${titleParts.join(' · ')} (${r.length})` : 'All Chemical List';
 
   visibleTableRows = show;
@@ -973,7 +991,7 @@ function renderTable(){
 }
 function prevPage(){ if(page > 1){ page--; renderTable(); } }
 function nextPage(){ const p = Math.ceil(filtered().length/pageSize); if(page < p){ page++; renderTable(); } }
-function refresh(){ updateKPIs(); updateCharts(); initDailyChangeSelectors(); renderDailyChangeChart(); renderHistoryChart(); page=1; renderTable(); }
+function refresh(){ updateKPIs(); updateCharts(); updateLocationFilterOptions(); initDailyChangeSelectors(); renderDailyChangeChart(); renderHistoryChart(); page=1; renderTable(); }
 
 // Initial empty render, then load from Google Sheet.
 renderMaterialInfo('');
