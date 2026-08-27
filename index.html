@@ -62,6 +62,14 @@
 const GOOGLE_SHEET_ID = '1kvZ1ym6fDGYze5e1KFNG6sSK1ooz4riWPJI-a5qvYXA';
 const INVENTORY_SHEET = 'Inventory by LB';
 const HISTORY_SHEET = 'DATA';
+// gviz/tq?tqx=out:csv infers one data type per column, so a mostly-numeric
+// column like Lot Number returns blank for text-like values (e.g. "Q731214/012").
+// The plain /export?format=csv endpoint returns each cell's raw text with no
+// type inference, so we key sheets by gid instead of by name.
+const SHEET_GIDS = {
+  'Inventory by LB': '853255065',
+  'DATA': '1956999677'
+};
 const EXPIRATION_COL_INDEX = 13; // Column N = 0-based index 13, text YYYY-MM-DD
 const AUTO_REFRESH_MS = 600000;
 
@@ -283,7 +291,8 @@ function daysLeftFromIsoDate(exp){
 function status(d){ if(d < 0) return 'expired'; if(d <= 30) return 'critical'; if(d <= 90) return 'warning'; if(d <= 180) return 'soon'; return 'ok'; }
 
 function googleSheetCsvUrl(sheetName){
-  return `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}&v=${Date.now()}`;
+  const gid = SHEET_GIDS[sheetName];
+  return `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv&gid=${gid}&v=${Date.now()}`;
 }
 function parseCsvText(txt){
   // Manual CSV parser: keep every cell as TEXT exactly from Google Sheet.
@@ -364,12 +373,14 @@ function mapInventoryRows(data){
     const rawExp = r[idx.exp];
     const exp = parseInventoryExpirationDate(rawExp);
     const d = daysLeftFromIsoDate(exp);
+    const rowId = String(r[idx.id] ?? '').trim();
+    const rowLot = idx.lot >= 0 ? String(r[idx.lot] ?? '').trim().replace(/^'/, '') : '';
+    const rawLotCell = idx.lot >= 0 ? String(r[idx.lot] ?? '') : '';
     return {
-      id: String(r[idx.id] ?? '').trim(),
+      id: rowId,
       name: String(r[idx.name] ?? '').trim(),
-      // Inventory by LB: Lot Number is column C (0-based index 2).
-      // Read column C directly so LOT is preserved for EFL, DEP, PTA, etc.
-      lot: String(r[2] ?? '').trim() || (idx.lot >= 0 ? String(r[idx.lot] ?? '').trim() : ''),
+      lot: rowLot,
+      rawLot: rawLotCell,
       loc: idx.loc >= 0 ? cleanLoc(r[idx.loc]) : 'N/A',
       qty: num(r[idx.qty]),
       um: idx.um >= 0 ? (String(r[idx.um] ?? 'KG').trim() || 'KG') : 'KG',
@@ -957,7 +968,9 @@ function renderTable(){
     }
     tr.appendChild(idCell);
     tr.appendChild(td(x.name));
-    tr.appendChild(td(x.lot));
+    const lotCell = td(x.lot);
+    lotCell.title = 'Raw từ Google Sheet: ' + (x.rawLot ? safeText(x.rawLot) : '(rỗng - ô này không có dữ liệu)');
+    tr.appendChild(lotCell);
     tr.appendChild(td(x.loc));
     tr.appendChild(td(x.department || 'FT'));
     tr.appendChild(td(fmt(x.qty), 'right'));
