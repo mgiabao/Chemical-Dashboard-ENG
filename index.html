@@ -359,32 +359,17 @@ function mapInventoryRows(data){
 
   if(idx.id < 0 || idx.name < 0 || idx.qty < 0) return [];
 
-  let lastLotByItem = {};
   return data.slice(headerRow+1).map((r, rowIndex) => {
     if(rowIndex < 5) console.log('DEBUG Column N Expiration sample', rowIndex+1, r[idx.exp]);
     const rawExp = r[idx.exp];
     const exp = parseInventoryExpirationDate(rawExp);
     const d = daysLeftFromIsoDate(exp);
-    const rowId = String(r[idx.id] ?? '').trim();
-    // Google Sheet uses merged cells for Lot Number when one lot spans several
-    // rows (split by License Plate). The CSV export only keeps the value on the
-    // first row of a merged range and leaves the rest blank, so we carry the
-    // last seen lot forward for rows sharing the same Item Number (not
-    // necessarily adjacent, since merged groups can be interrupted in the
-    // exported row order).
-    let rowLot = idx.lot >= 0 ? String(r[idx.lot] ?? '').trim().replace(/^'/, '') : '';
-    const rawLotCell = idx.lot >= 0 ? String(r[idx.lot] ?? '') : '';
-    if(idx.lot >= 0){
-      if(!rowLot && lastLotByItem[rowId]){
-        rowLot = lastLotByItem[rowId];
-      }
-      if(rowLot) lastLotByItem[rowId] = rowLot;
-    }
     return {
-      id: rowId,
+      id: String(r[idx.id] ?? '').trim(),
       name: String(r[idx.name] ?? '').trim(),
-      lot: rowLot,
-      rawLot: rawLotCell,
+      // Inventory by LB: Lot Number is column C (0-based index 2).
+      // Read column C directly so LOT is preserved for EFL, DEP, PTA, etc.
+      lot: String(r[2] ?? '').trim() || (idx.lot >= 0 ? String(r[idx.lot] ?? '').trim() : ''),
       loc: idx.loc >= 0 ? cleanLoc(r[idx.loc]) : 'N/A',
       qty: num(r[idx.qty]),
       um: idx.um >= 0 ? (String(r[idx.um] ?? 'KG').trim() || 'KG') : 'KG',
@@ -972,9 +957,7 @@ function renderTable(){
     }
     tr.appendChild(idCell);
     tr.appendChild(td(x.name));
-    const lotCell = td(x.lot);
-    lotCell.title = 'Raw từ Google Sheet: ' + (x.rawLot ? safeText(x.rawLot) : '(rỗng - ô này không có dữ liệu)');
-    tr.appendChild(lotCell);
+    tr.appendChild(td(x.lot));
     tr.appendChild(td(x.loc));
     tr.appendChild(td(x.department || 'FT'));
     tr.appendChild(td(fmt(x.qty), 'right'));
