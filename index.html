@@ -359,8 +359,7 @@ function mapInventoryRows(data){
 
   if(idx.id < 0 || idx.name < 0 || idx.qty < 0) return [];
 
-  let lastLotId = '';
-  let lastLotVal = '';
+  let lastLotByItem = {};
   return data.slice(headerRow+1).map((r, rowIndex) => {
     if(rowIndex < 5) console.log('DEBUG Column N Expiration sample', rowIndex+1, r[idx.exp]);
     const rawExp = r[idx.exp];
@@ -370,15 +369,16 @@ function mapInventoryRows(data){
     // Google Sheet uses merged cells for Lot Number when one lot spans several
     // rows (split by License Plate). The CSV export only keeps the value on the
     // first row of a merged range and leaves the rest blank, so we carry the
-    // last seen lot forward for consecutive rows of the same Item Number.
+    // last seen lot forward for rows sharing the same Item Number (not
+    // necessarily adjacent, since merged groups can be interrupted in the
+    // exported row order).
     let rowLot = idx.lot >= 0 ? String(r[idx.lot] ?? '').trim().replace(/^'/, '') : '';
     const rawLotCell = idx.lot >= 0 ? String(r[idx.lot] ?? '') : '';
     if(idx.lot >= 0){
-      if(!rowLot && rowId === lastLotId){
-        rowLot = lastLotVal;
+      if(!rowLot && lastLotByItem[rowId]){
+        rowLot = lastLotByItem[rowId];
       }
-      lastLotId = rowId;
-      lastLotVal = rowLot;
+      if(rowLot) lastLotByItem[rowId] = rowLot;
     }
     return {
       id: rowId,
